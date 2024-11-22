@@ -1,1 +1,5 @@
-
+# i.e.
+2024-11-20 09:59:40 slack_bridge [ERROR] | validators.py:135 | token_authentication() -> UNAUTHORIZED_API_TOKEN -> Missing "Authorization" Header |(request_data) b'{\n  "email": "abcd@example.com"\n}' | 10.100.20.5 POST /api/v1/users/search
+2024-11-20 10:00:23 slack_bridge [ERROR] | validators.py:25 | request_format_verification() -> IS_NOT_JSON_FORMAT -> (request_data) b'{\n  "email": defg@example.com\n}' | 10.100.50.111 POST /api/v1/users/search
+..
+..
