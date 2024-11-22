@@ -2,7 +2,7 @@
 
 HOME_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 APP_NAME="slack_bridge"
-GUNICORN_CONFIG="${HOME_PATH}/gunicorn_config.py"
+GUNICORN_CONFIG="${HOME_PATH}/service_config.py"
 
 start() {
     echo "Starting Gunicorn..."
