@@ -10,10 +10,6 @@
 
 Slack Bridge API is a Flask-based REST API designed for user management, email-based user search, and Slack message integration.
 
-Currently, this API supports querying users and sending messages to users through a Slack bot. Features such as file attachments (e.g., images), sending messages to multiple users via the bot, sending messages to a specific channel (similar to a webhook), and responding to bot commands are not yet implemented. You can continue to modify and update the API as needed to include these features.
-
-If you find this helpful, please the "star"🌟 to support further improvements.
-
 ## Features  
 
 - **User Search:** Fetch user details by email or retrieve all users.  
@@ -70,8 +66,8 @@ pip install -r requirements.txt
   * [3.List All Users](#3list-all-users)
     + [Request](#31request)
     + [Response](#32response)
-
-***
+  * [4.Error Handling](#4error-handling)
+  * [5.Token Generator](#5token-generator)
 
 ## 1.Send Message
 **Endpoint:** `/api/v1/message/send`
@@ -229,7 +225,7 @@ GET /api/v1/users/all
 }
 ```
 
-## Error Handling
+## 4.Error Handling
 The SlackBridge API uses standard HTTP response codes to indicate success or failure. Additional details are provided in the response body.
 
 | HTTP Code | Meaning               | Example                           |
@@ -240,5 +236,12 @@ The SlackBridge API uses standard HTTP response codes to indicate success or fai
 | 404       | Not Found             | The resource could not be found.  |
 | 500       | Internal Server Error | An error occurred on the server.  |
 
+## 5.Token Generator
+`token_generator.py` simplifies the creation, encryption, decryption, and validation of API tokens using `AES-GCM encryption`, ensuring high security and integrity. It is particularly useful for managing access keys with expiration and IP-based restrictions.
 
+### Features:
+- `Secure Token Management:` Generates encrypted tokens, stores them in a database, and retrieves them securely.
 
+- `Expiration & IP Validation:` Tokens include metadata such as issuer, expiration time, and allowed IP addresses for access control.
+
+- `AES-GCM Encryption:` Ensures confidentiality and integrity using a 32-byte passphrase key and a 12-byte nonce.
