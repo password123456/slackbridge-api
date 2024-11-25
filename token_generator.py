@@ -107,7 +107,7 @@ def get_key_data(keydb, encrypted_api_token):
                 break
     return passphrase_key
 
-def validate_access_key(access_key, remote_addr):
+def validate_token(access_key, remote_addr):
     """
     Validates the access key based on expiration and allowed IP addresses.
     Args:
@@ -159,7 +159,7 @@ def main():
     allow_ips = ['10.10.100.12', '10.10.100.3']  # Client IPs where AccessToken is allow
 
     # Create the original API token as a JSON object
-    original_api_token_string = json.dumps({
+    token_data = json.dumps({
         'iss': issuer,
         'app_id': app_id,
         'iat': int(iat_time.timestamp()),
@@ -168,13 +168,13 @@ def main():
     })
 
     # Encrypt and store the token
-    encrypted_access_key = encrypt(original_api_token_string, passphrase_key, nonce)
-    write_to_db(keydb, app_id, passphrase_key, encrypted_access_key)
+    encrypted_token = encrypt(token_data, passphrase_key, nonce)
+    write_to_db(keydb, app_id, passphrase_key, encrypted_token)
 
     # Decrypt and validate the token
-    decrypted_access_key = decrypt(keydb, encrypted_access_key)
-    if decrypted_access_key:
-        validate_access_key(decrypted_access_key, '192.168.10.1')
+    decrypted_token = decrypt(keydb, encrypted_token)
+    if decrypted_token:
+        validate_token(decrypted_token, '192.168.10.1')
 
 if __name__ == '__main__':
     try:
