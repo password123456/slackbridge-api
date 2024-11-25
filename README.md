@@ -14,6 +14,8 @@ Currently, this API supports querying users and sending messages to users throug
 
 Features such as file attachments (e.g., images), sending messages to multiple users via the bot, sending messages to a specific channel (similar to a webhook), and responding to bot commands are not yet implemented. You can continue to modify and update the API as needed to include these features.
 
+If you find this helpful, please the "star"🌟 to support further improvements.
+
 ## Features  
 
 - **User Search:** Fetch user details by email or retrieve all users.  
