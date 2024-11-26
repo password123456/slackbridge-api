@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HOME_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-APP_NAME="slack_bridge"
+APP_NAME="wsgi"
 GUNICORN_CONFIG="${HOME_PATH}/service_config.py"
 
 start() {
