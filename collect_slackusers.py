@@ -1,13 +1,17 @@
 __author__ = 'https://github.com/password123456/'
-__date__ = '2021.01.11'
-__version__ = '1.2'
+__date__ = '2024.11.26'
+__version__ = '1.3'
 __status__ = 'Production'
+
 
 import os
 import sys
 import requests
 import json
 from datetime import datetime, timezone
+from settings import Config
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def lookup_conversations_members(headers, channel_id, set_proxy):
@@ -70,28 +74,20 @@ def count_lines_in_file(file_path):
 
 
 def main():
-    slack_bot_token = 'your-slack-bot-token'
-    channel_id = 'slack-channel-id-where-all-users-are-joined-to-collect-user-info'
-
-    # set_proxy = {
-    #    'http': 'your-proxy-server',
-    #    'https': 'your-proxy-server'
-    # }
-    set_proxy = None  # if you don't want to use proxy server
-
     headers = {
-        'Authorization': f'Bearer {slack_bot_token}',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
-                      'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+        'Authorization': f'Bearer {Config.SLACK_BOT}',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 '
+                      '(KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36'
     }
+
+    # set_proxy = None  # if you don't want to use proxy server
+    set_proxy = Config.PROXY  # if you don't want to use proxy server
 
     result = lookup_conversations_members(headers, channel_id, set_proxy)
     member_data = json.loads(result)
 
     i = 0
     content_result = []
-    export_path = os.path.dirname(os.path.abspath(__file__))
-    users_db = os.path.join(export_path, 'app/db/users.db') 
     mode = 'w'
 
     if member_data['ok']:
@@ -117,7 +113,7 @@ def main():
                 # i.e. when it reaches 10, break into 10 units and save to users_db
                 # after saving, content_result is initialised to an empty list (to avoid duplicate storage)
                 if len(content_result) >= 10:
-                    export_data(users_db, content_result, mode)
+                    export_data(Config.USERS_DB, content_result, mode)
                     content_result = []
                     mode = 'a'
 
@@ -125,19 +121,19 @@ def main():
     # i.e. save the last remaining user information
     mode = 'a'
     if content_result:
-        export_data(users_db, content_result, mode)
+        export_data(Config.USERS_DB, content_result, mode)
 
     message = (f'>> collect slack_users <<\n\n'
                f'- {os.uname()[1]}\n'
                f'- *{datetime.now(timezone.utc).replace(microsecond=0).isoformat()}*')
-    if os.path.exists(users_db):
-        line_count = count_lines_in_file(users_db)
+    if os.path.exists(Config.USERS_DB):
+        line_count = count_lines_in_file(Config.USERS_DB)
         if line_count >= 0:
             message = f'*{message}\n\n`{line_count} user record created.`'
         else:
-            message = f'*{message}\n\n`{users_db} not found. something wrong?`'
+            message = f'*{message}\n\n`{Config.USERS_DB} not found. something wrong?`'
     else:
-        message = f'*{message}\n\n`{users_db} not found. something wrong?`'
+        message = f'*{message}\n\n`{Config.USERS_DB} not found. something wrong?`'
     print(message)
 
 
