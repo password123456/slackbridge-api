@@ -1,6 +1,6 @@
 __author__ = 'https://github.com/password123456/'
-__date__ = '2024.11.20'
-__version__ = '1.5'
+__date__ = '2024.12.03'
+__version__ = '1.6'
 __status__ = 'Production'
 
 import json
@@ -43,10 +43,11 @@ def verify_required_params(required_types):
                                  f'{request.remote_addr} {request.method} {request.path}')
                     return http_response_server_error('MISSING_REQUIRED_PARAMS')
 
-                if not isinstance(data[param], expected_type):
+                # Allow expected_type to be a single type or a tuple of types
+                if not isinstance(data[param], expected_type if isinstance(expected_type, tuple) else (expected_type,)):
                     invalid_data_type_params.append({
                         "param": param,
-                        "expected": expected_type.__name__,
+                        "expected": (expected_type if isinstance(expected_type, tuple) else (expected_type,)).__name__,
                         "got": type(data[param]).__name__
                     })
 
@@ -63,18 +64,29 @@ def verify_required_params(required_types):
 
 
 def verify_params_length(max_lengths):
+
     def decorator(func):
         @wraps(func)
         def required_params_length_verification(data, *args, **kwargs):
             invalid_length_params = []
 
-            # Check for missing or wrong-type parameters
             for param, max_length in max_lengths.items():
                 if param in data:
                     value = data[param]
 
-                    # Ensure that the parameter is a string (or can be measured in length)
-                    if isinstance(value, str):
+                    if param == 'email' and isinstance(value, (str, list)):
+                        if isinstance(value, str):
+                            value = [value]
+
+                        for email in value:
+                            if len(email) == 0 or len(email) > max_length:
+                                invalid_length_params.append({
+                                    'param': param,
+                                    'email': email,
+                                    'max_length': max_length,
+                                    'got': len(email)
+                                })
+                    elif isinstance(value, str):
                         if len(value) == 0 or len(value) > max_length:
                             invalid_length_params.append({
                                 'param': param,
@@ -83,17 +95,22 @@ def verify_params_length(max_lengths):
                             })
                     else:
                         logger.error(f'INVALID_DATA_TYPE -> (param) {param} -> '
-                                     f'expected_type: string, got: {value} | '
+                                     f'expected_type: string or list, got: {type(value).__name__} | '
                                      f'{request.remote_addr} {request.method} {request.path}')
                         return http_response_server_error('INVALID_DATA_TYPE')
 
             if invalid_length_params:
                 for error in invalid_length_params:
-                    logger.error(f'EXCEEDED_MAX_LENGTH -> (param) {error["param"]} -> '
-                                 f'max_length: {error["max_length"]}, '
-                                 f'got_length: {error["got"]} | '
-                                 f'{request.remote_addr} {request.method} {request.path}')
+                    if 'email' in error:
+                        logger.error(f'EXCEEDED_MAX_LENGTH -> (param) {error["param"]}, email: {error["email"]} -> '
+                                     f'max_length: {error["max_length"]}, got_length: {error["got"]} | '
+                                     f'{request.remote_addr} {request.method} {request.path}')
+                    else:
+                        logger.error(f'EXCEEDED_MAX_LENGTH -> (param) {error["param"]} -> '
+                                     f'max_length: {error["max_length"]}, got_length: {error["got"]} | '
+                                     f'{request.remote_addr} {request.method} {request.path}')
                 return http_response_server_error('EXCEEDED_MAX_LENGTH')
+
             return func(data, *args, **kwargs)
         return required_params_length_verification
     return decorator
@@ -103,22 +120,23 @@ def verify_email_param_suffix(email_suffix):
     def decorator(func):
         @wraps(func)
         def email_param_suffix_verification(data, *args, **kwargs):
-            # Check for missing or wrong-type parameters
             for param, suffix in email_suffix.items():
                 if param in data:
                     value = data[param]
 
-                    # Ensure that the parameter is a string
-                    if isinstance(value, str):
-                        if not value.endswith(suffix):
-                            logger.error(f'INVALID_EMAIL_SUFFIX -> (param) {param} -> '
-                                         f'suffix: {suffix}, '
-                                         f'got: {value} | '
-                                         f'{request.remote_addr} {request.method} {request.path}')
-                            return http_response_server_error('INVALID_EMAIL_SUFFIX')
+                    if isinstance(value, (str, list)):
+                        if isinstance(value, str):
+                            value = [value]
+
+                        for email in value:
+                            if not isinstance(email, str) or not email.endswith(suffix):
+                                logger.error(f'INVALID_EMAIL_SUFFIX -> (param) {param}, email: {email} -> '
+                                             f'required_suffix: {suffix} | '
+                                             f'{request.remote_addr} {request.method} {request.path}')
+                                return http_response_server_error('INVALID_EMAIL_SUFFIX')
                     else:
                         logger.error(f'INVALID_DATA_TYPE -> (param) {param} -> '
-                                     f'expected_type: string, got: {value} | '
+                                     f'expected_type: string or list, got: {type(value).__name__} | '
                                      f'{request.remote_addr} {request.method} {request.path}')
                         return http_response_server_error('INVALID_DATA_TYPE')
             return func(data, *args, **kwargs)
