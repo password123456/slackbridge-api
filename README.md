@@ -10,9 +10,7 @@
 
 Slack Bridge API is a Flask-based REST API designed for user management, email-based user search, and Slack message integration.
 
-Currently, this API supports querying users and sending messages to users through a Slack bot. 
-
-Features such as file attachments (e.g., images), sending messages to multiple users via the bot, sending messages to a specific channel (similar to a webhook), and responding to bot commands are not yet implemented. You can continue to modify and update the API as needed to include these features.
+Currently, this API only supports querying users and sending messages to users through a Slack bot. Features such as file attachments (e.g., images), sending messages to multiple users via the bot, sending messages to a specific channel (similar to a webhook), and responding to bot commands are not yet implemented. You can continue to modify and update the API as needed to include these features.
 
 If you find this helpful, please the "star"🌟 to support further improvements.
 
@@ -93,10 +91,10 @@ pip install -r requirements.txt
 
 **Body Parameters:**
 
-| **Name** | **Type** | **Description**                                                                                        | **Required** |
-|----------|----------|--------------------------------------------------------------------------------------------------------|--------------|
-| email    | `String` | Recipient's email address. The email format is validated by the `verify_email_param_suffix` decorator. | Yes          |
-| message  | `String` | The text message to send. Must not exceed `4000 bytes`.                                                | Yes          |
+| **Name** | **Type**        | **Description**                                                                                        | **Required** |
+|----------|-----------------|--------------------------------------------------------------------------------------------------------|--------------|
+| email    | `String`,`List` | Recipient's email address. The email format is validated by the `verify_email_param_suffix` decorator. | Yes          |
+| message  | `String`        | The text message to send. Must not exceed `4000 bytes`.                                                | Yes          |
 
 ### 1.1.Request:
 
@@ -107,16 +105,45 @@ pip install -r requirements.txt
 }
 ```
 
+```json
+{
+  "email": ["happy.hogan@example.com"],
+  "message": "Hello, happy"
+}
+```
+
+```json
+{
+  "email": ["tony.stark@example.com", "happy.hogan@example.com", "steve.rogers@example.com"],
+  "message": "Hello, Guys"
+}
+```
+
 ### 1.2.Response:
 - Success (200):
 ```json
 {
   "status": true,
   "result": {
-    "email": "stark@example.com",
+    "email": "tony.stark@example.com",
     "message": "Message sent successfully, 2024-08-27T12:00:00Z"
 }
 ```
+
+```json
+{
+  "status": true,
+  "result": {
+    "email": [
+      "tony.stark@example.com",
+      "happy.hogan@example.com",
+      "steve.rogers@example.com"
+    ],
+    "message": "Message sent successfully! 2024-12-02T04:42:18+00:00"
+  }
+}
+```
+
 
 - Error (400):
 ```json
