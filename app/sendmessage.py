@@ -1,5 +1,5 @@
 __author__ = 'https://github.com/password123456/'
-__date__ = '2024.11.20'
+__date__ = '2024.12.02'
 __version__ = '1.2'
 __status__ = 'Production'
 
@@ -10,7 +10,7 @@ from flask import current_app
 from datetime import datetime, timezone
 
 
-def slack_conversations_open(headers, set_proxy, user_id):
+def slack_conversations_open(headers, set_proxy, member_ids):
     api_method = 'conversations.open'
     result = ''
     try:
@@ -18,7 +18,7 @@ def slack_conversations_open(headers, set_proxy, user_id):
             f'https://slack.com/api/{api_method}',
             headers=headers,
             proxies=set_proxy,
-            json={'users': user_id}
+            json={'users': member_ids}
         )
         result = response.json()
         if result['ok']:
@@ -31,7 +31,7 @@ def slack_conversations_open(headers, set_proxy, user_id):
     return result
 
 
-def slack_chat_post_message(headers, set_proxy, user_chat_id, message):
+def slack_chat_post_message(headers, set_proxy, channel_id, message):
     api_method = 'chat.postMessage'
     result = ''
     try:
@@ -39,7 +39,7 @@ def slack_chat_post_message(headers, set_proxy, user_chat_id, message):
             f'https://slack.com/api/{api_method}',
             headers=headers,
             proxies=set_proxy,
-            json={'channel': user_chat_id, 'text': message, 'as_user': True}
+            json={'channel': channel_id, 'text': message, 'as_user': True}
         )
         # result = response.json()
         result = response.text
@@ -51,7 +51,7 @@ def slack_chat_post_message(headers, set_proxy, user_chat_id, message):
     return result
 
 
-def send_message(user_id, message):
+def send_message(member_ids, message):
     token = current_app.config['SLACK_BOT']
     # set_proxy = current_app.config['PROXY']
     set_proxy = None
@@ -63,10 +63,10 @@ def send_message(user_id, message):
                       '(KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36'
     }
 
-    dm_chat_id = slack_conversations_open(headers, set_proxy, user_id)
-    if dm_chat_id:
-        message = f'<@{user_id}>\n{message}'
-        result = slack_chat_post_message(headers, set_proxy, dm_chat_id, message)
+    dm_channel_id = slack_conversations_open(headers, set_proxy, member_ids)
+    if dm_channel_id:
+        # message = f'<@{user_id}>\n{message}'
+        result = slack_chat_post_message(headers, set_proxy, dm_channel_id, message)
         data = json.loads(result)
         if data['ok']:
             ret_result = True
