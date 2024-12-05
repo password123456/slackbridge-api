@@ -1,6 +1,6 @@
 __author__ = 'https://github.com/password123456/'
 __date__ = '2024.11.18'
-__version__ = '1.4'
+__version__ = '1.5'
 __status__ = 'Production'
 
 import json
@@ -34,6 +34,13 @@ ERROR_MESSAGES = {
         'message': {
             'status': False,
             'message': 'Input exceeds the allowed length or is empty. Please adjust and try again.'
+        }
+    },
+    'INVALID_PARAMS_SUFFIX': {
+        'http_status': 400,
+        'message': {
+            'status': False,
+            'message': 'The param provided does not match the required format or suffix. Check and try again.'
         }
     },
     'INVALID_EMAIL_SUFFIX': {
