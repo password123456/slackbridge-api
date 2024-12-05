@@ -18,7 +18,7 @@ If you find this helpful, please the "star"🌟 to support further improvements.
 
 - **User Search:** Fetch user details by email or retrieve all users.  
 - **Health Check:** Validate server status with a lightweight endpoint.  
-- **Slack Message Integration:** Send Slack messages to users via the Slack API.  
+- **Slack Message Integration:** Send Slack messages to `users/channels` via the Slack API.  
 
 ## Project Structure  
 
@@ -61,27 +61,29 @@ pip install -r requirements.txt
 ```
 
 # API Endpoints
-  * [1.Send Message](#1send-message)
+  * [1.Send Message - Users](#1send-messages-to-users)
     + [Request](#11request)
     + [Response](#12response)
-  * [2.Retrieve User Data](#2retrieve-user-data)
+  * [2.Send Message - Channels](#2send-messages-to-channels)
     + [Request](#21request)
     + [Response](#22response)
-  * [3.List All Users](#3list-all-users)
+  * [3.Retrieve User Data](#3retrieve-user-data)
     + [Request](#31request)
     + [Response](#32response)
-  * [4.Error Handling](#4error-handling)
-  * [5.Token Generator](#5token-generator)
+  * [4.List All Users](#4list-all-users)
+    + [Request](#41request)
+    + [Response](#42response)
+  * [5.Error Handling](#5error-handling)
+  * [6.Token Generator](#6token-generator)
 
-## 1.Send Message
-**Endpoint:** `/api/v1/message/send`
+## 1.Send Messages To Users
+**Endpoint:** `/api/v1/messages/users`
 
 **Method**: `POST`
 
 **Description**
-- Sends a message to a specific Slack user.
+- Sends a message to a specific Slack users.
 - Sends the message via a `Slack Bot`.
-- The name of the sending `Bot` is the one configured in Slack.
 - The size of a single message must not exceed the limit defined by the `verify_params_length` decorator.
 - The request body format is `JSON`.
 
@@ -91,53 +93,74 @@ pip install -r requirements.txt
 
 **Body Parameters:**
 
-| **Name** | **Type**        | **Description**                                                                                        | **Required** |
-|----------|-----------------|--------------------------------------------------------------------------------------------------------|--------------|
-| email    | `String`,`List` | Recipient's email address. The email format is validated by the `verify_email_param_suffix` decorator. | Yes          |
-| message  | `String`        | The text message to send. Must not exceed `4000 bytes`.                                                | Yes          |
+| **Name** | **Type**        | **Description**                                                                                              | **Required** |
+|----------|-----------------|--------------------------------------------------------------------------------------------------------------|--------------|
+| users    | `String`,`List` | Recipient's email address. The email format is validated by the `verify_params_suffix` decorator.            | Yes          |
+| message  | `String`        | The text message to send. Message must not exceed the limit defined by the `verify_params_length` decorator. | Yes          |
 
 ### 1.1.Request:
 
-```json
+```
+POST /api/v1/messages/users HTTP/1.1
+Host: slack-alim.example.com
+Authorization: <api_token>
+Content-Type: application/json
+        
 {
-  "email": "stark@example.com",
-  "message": "Hello Tony, Get Out!"
+  "users": "john.doe@example.com",
+  "message": "Hello John, Get Out!"
 }
 ```
 
-```json
+```
+POST /api/v1/messages/users HTTP/1.1
+Host: slack-alim.example.com
+Authorization: <api_token>
+Content-Type: application/json
+
 {
-  "email": ["happy.hogan@example.com"],
-  "message": "Hello, happy"
+  "users": ["jane.doe@example.com"],
+  "message": "Hello, Jane"
 }
 ```
 
-```json
+```
+POST /api/v1/messages/users HTTP/1.1
+Host: slack-alim.example.com
+Authorization: <api_token>
+Content-Type: application/json
+
 {
-  "email": ["tony.stark@example.com", "happy.hogan@example.com", "steve.rogers@example.com"],
+  "users": ["john.doe@example.com", "jane.doe@example.com", "baby.doe@example.com"],
   "message": "Hello, Guys"
 }
 ```
 
 ### 1.2.Response:
 - Success (200):
-```json
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
 {
   "status": true,
   "result": {
-    "email": "tony.stark@example.com",
+    "users": "john.doe@example.com",
     "message": "Message sent successfully, 2024-08-27T12:00:00Z"
 }
 ```
 
-```json
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
 {
   "status": true,
   "result": {
-    "email": [
-      "tony.stark@example.com",
-      "happy.hogan@example.com",
-      "steve.rogers@example.com"
+    "users": [
+      "john.doe@example.com",
+      "jane.doe@example.com",
+      "baby.doe@example.com"
     ],
     "message": "Message sent successfully! 2024-12-02T04:42:18+00:00"
   }
@@ -146,14 +169,128 @@ pip install -r requirements.txt
 
 
 - Error (400):
-```json
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
 {
   "status": false,
   "error": "Required fields are missing in the request body. Please check and try again."
 }
 ```
 
-## 2.Retrieve User Data
+## 2.Send Messages To Channels
+**Endpoint:** `/api/v1/messages/channels`
+
+**Method**: `POST`
+
+**Description**
+- Sends a message to a specific Slack Channels.
+- Sends the message via a `Slack Bot`.
+- `Slack Bot` must be joined the Channel
+- The size of a single message must not exceed the limit defined by the `verify_params_length` decorator.
+- The request body format is `JSON`.
+
+**Headers:**
+- `Authorization: <API_TOKEN>`
+- `Content-Type: application/json`
+
+**Body Parameters:**
+
+| **Name** | **Type**        | **Description**                                                                                              | **Required** |
+|----------|-----------------|--------------------------------------------------------------------------------------------------------------|--------------|
+| channels | `String`,`List` | Channel ids to Sending Message.                                                                              | Yes          |
+| message  | `String`        | The text message to send. Message must not exceed the limit defined by the `verify_params_length` decorator. | Yes          |
+
+### 2.1.Request:
+
+```
+POST /api/v1/messages/channels HTTP/1.1
+Host: slack-alim.example.com
+Authorization: <api_token>
+Content-Type: application/json
+        
+{
+  "channels": "C0769GJ758U",
+  "message": "<@U072E6GR1LM> Hello John, Get Out!"
+}
+```
+
+```
+POST /api/v1/messages/channels HTTP/1.1
+Host: slack-alim.example.com
+Authorization: <api_token>
+Content-Type: application/json
+
+{
+  "channels": ["C0769GJ758U"],
+  "message": "Hello, Guys BE happy"
+}
+```
+
+```
+POST /api/v1/messages/channels HTTP/1.1
+Host: slack-alim.example.com
+Authorization: <api_token>
+Content-Type: application/json
+
+{
+  "channels": ["C0769GJ758U","C06U8V03R0T"],
+  "message": "Hello, Guys BE happy"
+}
+```
+
+### 2.2.Response:
+- Success (200):
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "status": true,
+  "result": [
+    {
+      "status": true,
+      "channel": "C0769GJ758U",
+      "message": "Message sent successfully! 2024-12-05T08:48:17+00:00"
+    }
+  ]
+}
+```
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "status": true,
+  "result": [
+    {
+      "status": true,
+      "channel": "C0769GJ758U",
+      "message": "Message sent successfully! 2024-12-05T08:50:08+00:00"
+    },
+    {
+      "status": true,
+      "channel": "C06U8V03R0T",
+      "message": "Message sent successfully! 2024-12-05T08:50:09+00:00"
+    }
+  ]
+}
+```
+
+- Error (400):
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "status": false,
+  "error": "Required fields are missing in the request body. Please check and try again."
+}
+```
+
+## 3.Retrieve User Data
 **Endpoint**: `/api/v1/users/search`
 
 **Method:** `POST`
@@ -170,42 +307,53 @@ pip install -r requirements.txt
 
 **Body Parameters:**
 
-| **Name** | **Type** | **Description**                                                                                        | **Required** |
-|----------|----------|--------------------------------------------------------------------------------------------------------|--------------|
-| email    | `String` | Recipient's email address. The email format is validated by the `verify_email_param_suffix` decorator. | Yes          |
+| **Name** | **Type** | **Description**                                                                                   | **Required** |
+|----------|----------|---------------------------------------------------------------------------------------------------|--------------|
+| user     | `String` | Recipient's email address. The email format is validated by the `verify_params_suffix` decorator. | Yes          |
 
-### 2.1.Request
+### 3.1.Request
 
-```json
+```
+POST /api/v1/users/search HTTP/1.1
+Host: slack-alim.example.com
+Authorization: <api_token>
+Content-Type: application/json
+
 {
-  "email": "stark@example.com",
+  "user": "john.doe@example.com",
 }
 ```
 
-### 2.2.Response
+### 3.2.Response
 - Success (200):
-```json
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
 {
   "status": true,
   "result": {
     "datetime": "2024-11-22T10:09:14+09:00",
-    "real_name": "tony.stark",
-    "display_name": "stark",
+    "real_name": "john.doe",
+    "display_name": "john",
     "member_id": "U072E6GR1LM",
-    "user_email": "tony.stark@example.com"
+    "user_email": "john.doe@example.com"
   }
 }
 ```
 
 - Error (404):
-```json
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
 {
   "status": false,
   "message": "The specified user could not be found. Please check the input and try again."
 }
 ```
 
-## 3.List All Users
+## 4.List All Users
 **Endpoint:** `/api/v1/users/all`
 
 **Method:** `GET`
@@ -222,43 +370,48 @@ pip install -r requirements.txt
 **Body Parameters:**
 - `None`
 
-### 3.1.Request
+### 4.1.Request
 ```
-GET /api/v1/users/all
+GET /api/v1/users/all HTTP/1.1
+Host: slack-alim.example.com
+Authorization: <api_token>
 ```
 
-### 3.2.Response
+### 4.2.Response
 - Success (200):
-```json
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
 {
   "status": true,
   "message": [
     {
       "datetime": "2024-11-22T10:09:14+09:00",
-      "real_name": "tony.stark",
-      "display_name": "stark",
+      "real_name": "john.doe",
+      "display_name": "john",
       "member_id": "U072E6GR1LM",
-      "user_email": "tony.stark@example.com"
+      "user_email": "john.doe@example.com"
     },
     {
       "datetime": "2024-11-22T10:09:14+09:00",
-      "real_name": "Happy.Hogan",
-      "display_name": "happy",
+      "real_name": "jane.doe",
+      "display_name": "jane",
       "member_id": "U092P6GRALM",
-      "user_email": "happy.hogan@example.com"
+      "user_email": "jane.doe@example.com"
     },
     {
       "datetime": "2024-11-22T10:09:14+09:00",
-      "real_name": "Steve.Rogers",
-      "display_name": "steve",
+      "real_name": "baby.doe",
+      "display_name": "babybaby",
       "member_id": "U132E6BR1LM",
-      "user_email": "steve.rogers@example.com"
+      "user_email": "baby.doe@example.com"
     }
   ]
 }
 ```
 
-## 4.Error Handling
+## 5.Error Handling
 The SlackBridge API uses standard HTTP response codes to indicate success or failure. Additional details are provided in the response body.
 
 | HTTP Code | Meaning               | Example                           |
@@ -269,7 +422,7 @@ The SlackBridge API uses standard HTTP response codes to indicate success or fai
 | 404       | Not Found             | The resource could not be found.  |
 | 500       | Internal Server Error | An error occurred on the server.  |
 
-## 5.Token Generator
+## 6.Token Generator
 `token_generator.py` simplifies the creation, encryption, decryption, and validation of API tokens using `AES-GCM encryption`, ensuring high security and integrity. It is particularly useful for managing access keys with expiration and IP-based restrictions.
 
 ### Features:
