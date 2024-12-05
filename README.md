@@ -75,6 +75,7 @@ pip install -r requirements.txt
     + [Response](#42response)
   * [5.Error Handling](#5error-handling)
   * [6.Token Generator](#6token-generator)
+  * [7.Slack Bot Scopes](#7slack-bot-scopes)
 
 ## 1.Send Messages To Users
 **Endpoint:** `/api/v1/messages/users`
@@ -427,7 +428,39 @@ The SlackBridge API uses standard HTTP response codes to indicate success or fai
 
 ### Features:
 - `Secure Token Management:` Generates encrypted tokens, stores them in a database, and retrieves them securely.
-
 - `Expiration & IP Validation:` Tokens include metadata such as issuer, expiration time, and allowed IP addresses for access control.
-
 - `AES-GCM Encryption:` Ensures confidentiality and integrity using a 32-byte passphrase key and a 12-byte nonce.
+
+## 7.Slack Bot Scopes
+- Below are the scopes required for creating a new Slack Bot.
+- The list also includes optional scopes that are not necessary (e.g., files:read, files:write).
+- Carefully review and grant scopes based on your specific use case and requirements.
+
+Scopes does not allow Slackbots to send messages to arbitrary channels. To send messages to a channel, the Slackbot must be a member of the channel.
+
+| **OAuth Scope**          | **Description**                                                                      |
+|--------------------------|--------------------------------------------------------------------------------------|
+| `channels:history`       | View messages and other content in public channels that wawa has been added to       |
+| `channels:join`          | Join public channels in a workspace                                                  |
+| `channels:manage`        | Manage public channels that wawa has been added to and create new ones               |
+| `channels:read`          | View basic information about public channels in a workspace                          |
+| `channels:write.invites` | Invite members to public channels                                                    |
+| `chat:write`             | Send messages as @wa-bot                                                             |
+| `chat:write.customize`   | Send messages as @wa-bot with a customized username and avatar                       |
+| `chat:write.public`      | Send messages to channels @wa-bot isn't a member of                                  |
+| `files:read`             | View files shared in channels and conversations that wawa has been added to          |
+| `files:write`            | Upload, edit, and delete files as wawa                                               |
+| `groups:history`         | View messages and other content in private channels that wawa has been added to      |
+| `groups:read`            | View basic information about private channels that wawa has been added to            |
+| `groups:write`           | Manage private channels that wawa has been added to and create new ones              |
+| `groups:write.invites`   | Invite members to private channels                                                   |
+| `im:history`             | View messages and other content in direct messages that wawa has been added to       |
+| `im:read`                | View basic information about direct messages that wawa has been added to             |
+| `im:write`               | Start direct messages with people                                                    |
+| `incoming-webhook`       | Post messages to specific channels in Slack                                          |
+| `mpim:history`           | View messages and other content in group direct messages that wawa has been added to |
+| `mpim:read`              | View basic information about group direct messages that wawa has been added to       |
+| `mpim:write`             | Start group direct messages with people                                              |
+| `users.profile:read`     | View profile details about people in a workspace                                     |
+| `users:read`             | View people in a workspace                                                           |
+| `users:read.email`       | View email addresses of people in a workspace                                        |
