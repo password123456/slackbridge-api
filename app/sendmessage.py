@@ -1,6 +1,6 @@
 __author__ = 'https://github.com/password123456/'
-__date__ = '2024.12.02'
-__version__ = '1.2'
+__date__ = '2024.12.03'
+__version__ = '1.5'
 __status__ = 'Production'
 
 import sys
@@ -51,22 +51,15 @@ def slack_chat_post_message(headers, set_proxy, channel_id, message):
     return result
 
 
-def send_message(member_ids, message):
-    token = current_app.config['SLACK_BOT']
+def send_to_users(member_ids, message):
     # set_proxy = current_app.config['PROXY']
     set_proxy = None
+    headers = current_app.config['SLACK_REQ_HEADERS']
 
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 '
-                      '(KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36'
-    }
-
-    dm_channel_id = slack_conversations_open(headers, set_proxy, member_ids)
-    if dm_channel_id:
+    channel_ids = slack_conversations_open(headers, set_proxy, member_ids)
+    if channel_ids:
         # message = f'<@{user_id}>\n{message}'
-        result = slack_chat_post_message(headers, set_proxy, dm_channel_id, message)
+        result = slack_chat_post_message(headers, set_proxy, channel_ids, message)
         data = json.loads(result)
         if data['ok']:
             ret_result = True
@@ -76,3 +69,45 @@ def send_message(member_ids, message):
             ret_result = False
             ret_data = f'Message sent failed! {data["error"]}'
         return ret_result, ret_data
+
+
+def send_to_channels(channel_ids, message):
+    # set_proxy = current_app.config['PROXY']
+    set_proxy = None
+    headers = current_app.config['SLACK_REQ_HEADERS']
+
+    if isinstance(channel_ids, str):
+        channel_ids = [channel_ids]
+
+    response_results = []
+    success_count = 0
+
+    if channel_ids:
+        for channel_id in channel_ids:
+            result = slack_chat_post_message(headers, set_proxy, channel_id, message)
+            data = json.loads(result)
+
+            if data['ok']:
+                success_count += 1
+                response_results.append({
+                    'status': True,
+                    'channel': channel_id,
+                    'message': f'Message sent successfully! '
+                               f'{datetime.utcfromtimestamp(float(data["ts"])).replace(tzinfo=timezone.utc, microsecond=0).isoformat()}'
+                })
+            else:
+                response_results.append({
+                    'status': True,
+                    'channel': channel_id,
+                    'message': f'Message sent failed! {data["error"]}'
+                })
+
+    # Aggregate final response status
+    # is True or False
+    overall_status = success_count == len(channel_ids)
+
+    response_data = {
+        "status": overall_status,
+        "result": response_results
+    }
+    return response_data
