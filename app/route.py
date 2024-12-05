@@ -1,5 +1,5 @@
 __author__ = 'https://github.com/password123456/'
-__date__ = '2024.12.02'
+__date__ = '2024.12.03'
 __version__ = '1.7'
 __status__ = 'Production'
 
@@ -8,9 +8,9 @@ from datetime import datetime, timezone
 from flask import Blueprint, make_response
 from app.exceptions import http_response_server_error
 from app.validators import (verify_request_data_format, verify_required_params,
-                            verify_params_length, verify_email_param_suffix, authentication_required)
+                            verify_params_length, verify_params_suffix, authentication_required)
 from app.search import search_email, search_member_ids, export_all_users
-from app.sendmessage import send_message
+from app.sendmessage import send_to_users, send_to_channels
 
 default = Blueprint('default', __name__)
 
@@ -19,7 +19,7 @@ default = Blueprint('default', __name__)
 def hello_world():
     response_data = {
         'status': True,
-        'message': 'Hello, JF'
+        'message': 'Hello World'
     }
 
     return make_response(
@@ -31,8 +31,10 @@ def hello_world():
 def health_check():
     response_data = {
         'status': True,
-        'message': f'Yes, I\'m Alive. '
-                   f'{datetime.now(timezone.utc).replace(tzinfo=timezone.utc, microsecond=0).isoformat()}'
+        'result': {
+            'message': f'Yes, I\'m Alive. '
+                       f'{datetime.now(timezone.utc).replace(tzinfo=timezone.utc, microsecond=0).isoformat()}'
+        }
     }
     return make_response(
         json.dumps(response_data, indent=2) + '\n',
@@ -62,12 +64,13 @@ def export_all():
 @api_v1.route('/users/search', methods=['POST'])
 @authentication_required
 @verify_request_data_format
-@verify_required_params({'email': str})
-@verify_params_length({'email': 30})
-@verify_email_param_suffix({'email': '@example.com'})
+#@verify_required_params({'user': str})
+@verify_required_params({'user': (str, list)})
+@verify_params_length({'user': 30})
+@verify_params_suffix({'user': '@example.com'})
 def users_search_by_email(data):
     if data is not None:
-        ret_member_id, ret_member_info = search_email(data['email'])
+        ret_member_id, ret_member_info = search_email(data['user'])
         if ret_member_id and ret_member_info:
             response_data = {
                 'status': True,
@@ -82,20 +85,20 @@ def users_search_by_email(data):
         return http_response_server_error('SERVER_ERROR')
 
 
-@api_v1.route('/messages/send', methods=['POST'])
+@api_v1.route('/messages/users', methods=['POST'])
 @verify_request_data_format
-@verify_required_params({'email': (str, list), 'message': str})
-@verify_params_length({'email': 30, 'message': 4000})
-@verify_email_param_suffix({'email': '@example.com'})
-def messages_send(data):
+@verify_required_params({'users': (str, list), 'message': str})
+@verify_params_length({'users': 30, 'message': 4000})
+@verify_params_suffix({'users': '@example.com'})
+def messages_to_users(data):
     if data is not None:
-        ret_member_ids = search_member_ids(data['email'])
+        ret_member_ids = search_member_ids(data['users'])
         if ret_member_ids:
-            ret_send_status, ret_send_result = send_message(ret_member_ids, data['message'])
+            ret_send_status, ret_send_result = send_to_users(ret_member_ids, data['message'])
 
             response_data = {
                 'status': True,
-                'result': {'email': data['email'], 'message': ret_send_result}
+                'result': {'users': data['users'], 'message': ret_send_result}
             }
             # Update status based on the result of send_message
             if ret_send_status:
@@ -108,5 +111,19 @@ def messages_send(data):
                 200, {'Content-Type': 'application/json'})
         else:
             return http_response_server_error('USER_NOT_FOUND')
+    else:
+        return http_response_server_error('SERVER_ERROR')
+
+
+@api_v1.route('/messages/channels', methods=['POST'])
+@verify_request_data_format
+@verify_required_params({'channels': (str, list), 'message': str})
+@verify_params_length({'channels': 15, 'message': 4000})
+def messages_to_channels(data):
+    if data is not None:
+        ret_response_data = send_to_channels(data['channels'], data['message'])
+        return make_response(
+            json.dumps(ret_response_data, indent=2) + '\n',
+            200, {'Content-Type': 'application/json'})
     else:
         return http_response_server_error('SERVER_ERROR')
